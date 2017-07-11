@@ -1,0 +1,67 @@
+<AutoLayout>:
+    orientation: "vertical"
+    ActionBar:
+        ActionView:
+            ActionPrevious:
+                with_previous: False
+                app_icon: 'logo.png'
+                title: "Automatyczne raporty Fiat"
+
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            orientation: "vertical"
+            padding: 150, 100, 150, 150
+            BoxLayout:
+                orientation: "horizontal"
+                padding: 10
+                Label:
+                    text: "Test Order:"
+                TextInput:
+                    text: ""
+                    input_filter: 'int'
+                    multiline: False
+                    hint_text: "Wpisz tylko numer"
+            BoxLayout:
+                orientation: "horizontal"
+                padding: 10
+                Label:
+                    text: "Video FPS:"
+                TextInput:
+                    text: ""
+                    input_filter: 'int'
+                    multiline: False
+                    hint_text: "int"
+            BoxLayout:
+                orientation: "horizontal"
+                padding: 10
+                Label:
+                    text: "Time start:"
+                TextInput:
+                    text: ""
+                    input_filter: 'int'
+                    multiline: False
+                    hint_text: "int"
+            BoxLayout:
+                orientation: "horizontal"
+                padding: 10
+                Label:
+                    text: "Time interval:"
+                TextInput:
+                    text: ""
+                    input_filter: 'int'
+                    multiline: False
+                    hint_text: "int"
+            BoxLayout:
+                orientation: "horizontal"
+                padding: 10
+                Label:
+                    text: "Frames qty:"
+                TextInput:
+                    text: ""
+                    input_filter: 'int'
+                    multiline: False
+                    hint_text: "int"
+            Button:
+                text: "Start"
+                #on_release:
