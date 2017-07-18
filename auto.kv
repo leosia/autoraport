@@ -12,6 +12,7 @@
     fps: fps_kv
     start: start_kv
     interval: interval_kv
+    files: files
 
 
     ActionBar:
@@ -88,8 +89,10 @@
                 text: "Videos"
                 on_release: root.load_popup.open()
         BoxLayout:
-            id: loaded_vids
             size_hint_x: .5
+            Label:
+                id: files
+                text: ''
 
 
     Button:
@@ -119,9 +122,19 @@
                 size_hint_x: .4
             Button:
                 text: "Select"
-                on_release: root.copy_files(filechooser.path, filechooser.selection, filechooser.text)
+                on_release: root.copy_files(filechooser.path)
             Button:
                 text: "Cancel"
                 on_release: root.dismiss()
             Label:
                 size_hint_x: .4
+
+<StartPopup>:
+    size_hint: .6, .4
+    start: start
+    auto_dismiss: False
+    Label:
+        id: start
+        markup: True
+        size_text: root.size
+        text: "<b>Loading...</b>"

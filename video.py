@@ -17,12 +17,11 @@ from reportlab.lib.pagesizes import A4
 
 
 class Video:
-    def __init__(self, fps, start, interval, vid_path="", to_num="TO-XXXXXXXX"):
+    def __init__(self, fps, start, interval, to_num):
         self.fps = fps
         self.start = start
         self.to_num = to_num
         self.interval = interval
-        self.vid_path = vid_path
         self.temp_dict = r'C:\Temp'
         self.ext_list = ['.avi', '.mp4', '.mkv']
 
@@ -33,6 +32,7 @@ class Video:
         for file in file_list:
             self.video_cutter(file, self.temp_dict)
         self.pdf_creator()
+        return True
 
 
     def file_list(self, directory, ext_list):
@@ -130,7 +130,7 @@ class Video:
         doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) + 5 * cm), "Fiat Report")
         doc.setFontSize(24)
         doc.drawImage('logo2.png', ((A4[0] / 2)-((A4[0]/3)/2.125)), ((A4[1] / 2)), A4[0]/3, (A4[0]/3)/2.125, preserveAspectRatio=True, anchor='c')
-        doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 1 * cm), self.to_num)
+        doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 1 * cm), 'TO-' + self.to_num)
         doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 5 * cm), 'Created:')
         doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 6 * cm), date.strftime('%d %B %Y'))
         doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 7 * cm), username)
@@ -163,8 +163,3 @@ class Video:
 
         doc.showPage()
         doc.save()
-
-        return True
-
-v = Video(3000, 20, 15)
-v.main()
