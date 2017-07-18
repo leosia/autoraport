@@ -1,67 +1,127 @@
+     #       canvas.before:
+    #            Color:
+   #                 rgba: .30, .30, .30, 1
+  #              Rectangle:
+ #                   pos: self.pos
+#                    size: self.size
+
+
 <AutoLayout>:
     orientation: "vertical"
+    to_num: to_num_kv
+    fps: fps_kv
+    start: start_kv
+    interval: interval_kv
+
+
     ActionBar:
         ActionView:
             ActionPrevious:
                 with_previous: False
                 app_icon: 'logo.png'
-                title: "Automatyczne raporty Fiat"
+                title: "Automatic Fiat Report"
+
 
     BoxLayout:
-        orientation: "vertical"
+        orientation: 'horizontal'
         BoxLayout:
+            size_hint_x: .6
             orientation: "vertical"
-            padding: 150, 100, 150, 150
+            canvas.before:
+                Color:
+                    rgba: .10, .10, .10, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                size_hint_y: 2
             BoxLayout:
                 orientation: "horizontal"
                 padding: 10
                 Label:
                     text: "Test Order:"
                 TextInput:
+                    id: to_num_kv
                     text: ""
+                    spacing: 20, 20, 20, 20
                     input_filter: 'int'
                     multiline: False
-                    hint_text: "Wpisz tylko numer"
+                    hint_text: "Only number"
             BoxLayout:
                 orientation: "horizontal"
                 padding: 10
                 Label:
                     text: "Video FPS:"
                 TextInput:
-                    text: ""
+                    id: fps_kv
+                    text: "3000"
                     input_filter: 'int'
                     multiline: False
-                    hint_text: "int"
+                    hint_text: "Only if framerate is not 3000"
             BoxLayout:
                 orientation: "horizontal"
                 padding: 10
                 Label:
                     text: "Time start:"
                 TextInput:
+                    id: start_kv
                     text: ""
                     input_filter: 'int'
                     multiline: False
-                    hint_text: "int"
+                    hint_text: "Time of first picture in pdf"
             BoxLayout:
                 orientation: "horizontal"
                 padding: 10
                 Label:
+                    id: lab
                     text: "Time interval:"
                 TextInput:
+                    id: interval_kv
                     text: ""
                     input_filter: 'int'
                     multiline: False
-                    hint_text: "int"
-            BoxLayout:
-                orientation: "horizontal"
-                padding: 10
-                Label:
-                    text: "Frames qty:"
-                TextInput:
-                    text: ""
-                    input_filter: 'int'
-                    multiline: False
-                    hint_text: "int"
+                    hint_text: ""
+            Label:
+                size_hint_y: 2
             Button:
-                text: "Start"
-                #on_release:
+                background_color: .65, .65, .65, 1
+                text: "Videos"
+                on_release: root.load_popup.open()
+        BoxLayout:
+            id: loaded_vids
+            size_hint_x: .5
+
+
+    Button:
+        size_hint_y: .15
+        text: "Start"
+        on_release: root.video_processing()
+
+
+<VideoPopup>:
+    size_hint: .8, .8
+    title: "Select videos"
+    title_size: root.height * .05
+    auto_dismiss: False
+    filechooser: filechooser
+    BoxLayout:
+        orientation: 'vertical'
+
+        FileChooserListView:
+            id: filechooser
+            path: ''
+            filters: ['*.avi', '*.mkv', '*.mp4']
+
+        BoxLayout:
+            size_hint_y: None
+            height: 50
+            Label:
+                size_hint_x: .4
+            Button:
+                text: "Select"
+                on_release: root.copy_files(filechooser.path, filechooser.selection, filechooser.text)
+            Button:
+                text: "Cancel"
+                on_release: root.dismiss()
+            Label:
+                size_hint_x: .4
