@@ -4,15 +4,10 @@ import cv2
 import os
 import re
 import getpass
-import numpy as np
 import datetime as dt
-from shutil import copyfile
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import cm
-from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.lib.pagesizes import A4
 
 
@@ -22,16 +17,17 @@ class Video:
         self.start = start
         self.to_num = to_num
         self.interval = interval
-        self.temp_dict = r'C:\Temp'
+        self.temp_dict = r'C:\Temp\afr'
         self.ext_list = ['.avi', '.mp4', '.mkv']
+        self.res_list = []
 
 
-    def main(self):
+    def main(self, mainpath):
         self.temp_dirs(self.temp_dict, self.ext_list)
         file_list = self.file_list(self.temp_dict, self.ext_list)
         for file in file_list:
             self.video_cutter(file, self.temp_dict)
-        self.pdf_creator()
+        self.pdf_creator(min(self.res_list), mainpath)
         return True
 
 
@@ -56,7 +52,7 @@ class Video:
         :return: None
         """
         for file in self.file_list(main_path, ext_list):
-            temp_dict = r'C:\Temp' + '\\' + file[:-4]
+            temp_dict = r'C:\Temp\afr' + '\\' + file[:-4]
             if not os.path.exists(temp_dict):
                 os.mkdir(temp_dict)
 
@@ -76,11 +72,15 @@ class Video:
         file = path + "\\" + filename
         video = cv2.VideoCapture(file)
         c = 0
+        width = video.get(3)
+        height = video.get(4)
+        ratio = width/height
+        self.res_list.append(ratio) if ratio not in self.res_list else None
         while(video.isOpened()):
             ret, frame = video.read()
             if self.time_converter(c) % self.interval == 0:
                 img_name = filename[:11] + str(c) + "_" + format(self.time_converter(c), '.1f') + '.jpg'
-                img_path = r'C:\Temp' + "\\" + filename[:-4] + "\\" + img_name
+                img_path = r'C:\Temp\afr' + "\\" + filename[:-4] + "\\" + img_name
                 if ret == True:
                     cv2.imwrite(img_path, frame)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -91,7 +91,7 @@ class Video:
         video.release()
 
 
-    def pdf_creator(self):
+    def pdf_creator(self, ratio, mainpath):
 
         def sorted_nicely(l):
             """
@@ -123,14 +123,15 @@ class Video:
         username = getpass.getuser().split('.')
         username = username[0].capitalize() + ' ' + username[1].capitalize()
 
-        doc = canvas.Canvas('report.pdf', pagesize=A4)
+        pdf_path = mainpath + '\\' + 'report.pdf'
+        doc = canvas.Canvas(pdf_path, pagesize=A4)
 
         doc.setFont('Helvetica-Bold', 65)
         doc.setFillColorRGB(0, (40/255), (81/255))
         doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) + 5 * cm), "Fiat Report")
         doc.setFontSize(24)
         doc.drawImage('logo2.png', ((A4[0] / 2)-((A4[0]/3)/2.125)), ((A4[1] / 2)), A4[0]/3, (A4[0]/3)/2.125, preserveAspectRatio=True, anchor='c')
-        doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 1 * cm), 'TO-' + self.to_num)
+        doc.drawCentredString((A4[0] / 2) + 3, ((A4[1] / 2) - 1 * cm), 'TO-' + self.to_num)
         doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 5 * cm), 'Created:')
         doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 6 * cm), date.strftime('%d %B %Y'))
         doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) - 7 * cm), username)
@@ -140,21 +141,23 @@ class Video:
         margins = 0.5 * cm
         spacing = 0.5 * cm
 
+
+
         box_width = (A4[0] - 2 * margins - (spacing * (columns - 1))) / columns
-        box_height = box_width / 0.8
+        box_height = box_width / ratio
+        box_height += box_height*0.2
 
         pos_y = box_height * (files_qty - 1) + margins
 
         doc.setPageSize((A4[0], files_qty * box_height + (2 * cm)))
         doc.setFont('Helvetica-Bold', 38 / (columns if columns < 12 else columns * 2))
 
-
         for y in range(0, files_qty):
             for x in range(0, columns):
                 pos_x = margins + x * (box_width + margins)
                 src = self.temp_dict + '\\' + dirList[x] + '\\' + file_list_sorted[x][y]
                 doc.drawImage(src, pos_x, pos_y, box_width, box_height, preserveAspectRatio=True, anchor='n')
-                doc.drawCentredString(pos_x + (box_width / 2), pos_y + ((box_height - box_width) / 2), prepare_description(file_list_sorted[x][y]))
+                doc.drawCentredString(pos_x + (box_width / 2), pos_y + ((box_height - box_width) / 2.5), prepare_description(file_list_sorted[x][y]))
                 if y == files_qty and x == columns:
                     break
             if y == files_qty:
