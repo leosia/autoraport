@@ -14,6 +14,9 @@
                 with_previous: False
                 app_icon: 'logo.png'
                 title: "Autoliv Automatic Report"
+            ActionButton:
+                text: "About"
+                on_release: root.version_popup.open_popup()
 
 
     BoxLayout:
@@ -173,3 +176,32 @@
                 on_release: root.close_popup()
             Label:
                 size_hint_x: .3
+
+<VersionPopup>:
+    size_hint: .9, .9
+    version_label: version_label
+    auto_dismiss: False
+    title: 'Autoliv Auto Report Info'
+    BoxLayout:
+        orientation: "vertical"
+        Label:
+            haling: "center"
+            markup: True
+            id: version_label
+            #size_text: root.size
+            text_size: self.width, None
+            font_size: "20sp"
+            text: root.get_text()
+            center_y: .5
+            on_ref_press: root.on_ref_press(*args)
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: .13
+            Label:
+                size_hint_x: .4
+            Button:
+                markup: True
+                text: '[b]OK[/b]'
+                on_release: root.close_popup()
+            Label:
+                size_hint_x: .4

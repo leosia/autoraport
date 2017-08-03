@@ -3,6 +3,7 @@ import kivy
 import os
 import video
 import getpass
+import webbrowser
 
 import shutil
 from shutil import copyfile
@@ -27,6 +28,41 @@ class StartPopup(Popup):
     def complete(self):
         pass
 
+class VersionPopup(Popup):
+
+    version_popup = ObjectProperty
+
+    def __init__(self, *args, **kwargs):
+        super(VersionPopup, self).__init__(**kwargs)
+
+    def get_text(self):
+        text = ("[b]Autoliv Automatic Report[/b]\n"
+                "Version 1.0\n"
+                "\n"
+                "This application is under the [b]MIT License[/b] (click [b][ref=mit]here[/ref][/b])\n"
+                "Libraries OpenCV and ReportLab are under the [b]BSD License[/b] (click [b][ref=opencv]here[/ref][/b])\n"
+                "\n"
+                "Known bugs:\n"
+                " - if you use only one video file and set start time as 0ms, pdf will have blank pages.\n"
+                " - with more videos, after pressing the 'Start' button, app will froze for some time,\n"
+                " decompressing videos need more time, please be patient :)\n"
+                "\n"
+                "If you find any more bugs please let me know by email [b]mateusz.sobek@autoliv.com[/b]")
+        return text
+
+    def on_ref_press(self, instance, ref):
+        ref_dict = {
+            "mit": "https://en.wikipedia.org/wiki/MIT_License",
+            "opencv": "https://github.com/opencv/opencv/blob/master/LICENSE"
+        }
+
+        webbrowser.open(ref_dict[ref])
+
+    def open_popup(self):
+        self.open()
+
+    def close_popup(self):
+        self.dismiss()
 
 class InfoPopup(Popup):
 
@@ -84,6 +120,7 @@ class AutoLayout(BoxLayout):
         self.filenames = ""
         self.start_popup = StartPopup()
         self.infopopup_class = InfoPopup()
+        self.version_popup = VersionPopup()
         self.mainpath = shell.SHGetFolderPath(0, shellcon.CSIDL_DESKTOP, None, 0)
         self.run_time = 0
 
@@ -126,7 +163,8 @@ class AutoApp(App):
         return AutoLayout()
 
     def on_stop(self):
-        shutil.rmtree(r'C:\Temp\afr')
+        if os.path.exists(r'C:\Temp\afr'):
+            shutil.rmtree(r'C:\Temp\afr')
 
 if __name__ == '__main__':
     AutoApp().run()
