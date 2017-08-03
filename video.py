@@ -12,11 +12,12 @@ from reportlab.lib.pagesizes import A4
 
 
 class Video:
-    def __init__(self, fps, start, interval, to_num):
+    def __init__(self, fps, start, interval, to_num, pdftitle):
         self.fps = fps
         self.start = start
         self.to_num = to_num
         self.interval = interval
+        self.pdftitle = pdftitle
         self.temp_dict = r'C:\Temp\afr'
         self.ext_list = ['.avi', '.mp4', '.mkv']
         self.res_list = []
@@ -24,10 +25,10 @@ class Video:
 
     def main(self, mainpath):
         self.temp_dirs(self.temp_dict, self.ext_list)
-        file_list = self.file_list(self.temp_dict, self.ext_list)
-        for file in file_list:
+        files_list = self.file_list(self.temp_dict, self.ext_list)
+        for file in files_list:
             self.video_cutter(file, self.temp_dict)
-        self.pdf_creator(min(self.res_list), mainpath)
+        self.pdf_creator(min(self.res_list), mainpath, self.pdftitle)
         return True
 
 
@@ -78,20 +79,23 @@ class Video:
         self.res_list.append(ratio) if ratio not in self.res_list else None
         while(video.isOpened()):
             ret, frame = video.read()
-            if self.time_converter(c) % self.interval == 0:
-                img_name = filename[:11] + str(c) + "_" + format(self.time_converter(c), '.1f') + '.jpg'
-                img_path = r'C:\Temp\afr' + "\\" + filename[:-4] + "\\" + img_name
-                if ret == True:
-                    cv2.imwrite(img_path, frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
+            if self.time_converter(c) >= self.start:
+                # print('Start time:', self.start, 'aktualny czas:', self.time_converter(c))
+                if self.time_converter(c) % self.interval == 0:
+                    # print('Interval time', self.interval, 'aktualny czas', self.time_converter(c))
+                    img_name = filename[:11] + str(c) + "_" + format(self.time_converter(c), '.1f') + '.jpg'
+                    img_path = r'C:\Temp\afr' + "\\" + filename[:-4] + "\\" + img_name
+                    if ret == True:
+                        cv2.imwrite(img_path, frame)
+                        if cv2.waitKey(1) & 0xFF == ord('q'):
+                            break
+                    else:
                         break
-                else:
-                    break
             c += 1
         video.release()
 
 
-    def pdf_creator(self, ratio, mainpath):
+    def pdf_creator(self, ratio, mainpath, pdftitle):
 
         def sorted_nicely(l):
             """
@@ -104,8 +108,10 @@ class Video:
 
         def prepare_description(filename):
             name = os.path.splitext(filename)
-            time = name[0][-4:]
-            if time[:1] == '_':
+            time = name[0][-5:]
+            if time[1] == '_':
+                time = time[2:]
+            elif time[0] == '_':
                 time = time[1:]
             text = name[0][:10].upper() + '   Time: ' + time + ' ms'
             return text
@@ -128,7 +134,7 @@ class Video:
 
         doc.setFont('Helvetica-Bold', 65)
         doc.setFillColorRGB(0, (40/255), (81/255))
-        doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) + 5 * cm), "Fiat Report")
+        doc.drawCentredString((A4[0] / 2), ((A4[1] / 2) + 5 * cm), pdftitle)
         doc.setFontSize(24)
         doc.drawImage('logo2.png', ((A4[0] / 2)-((A4[0]/3)/2.125)), ((A4[1] / 2)), A4[0]/3, (A4[0]/3)/2.125, preserveAspectRatio=True, anchor='c')
         doc.drawCentredString((A4[0] / 2) + 3, ((A4[1] / 2) - 1 * cm), 'TO-' + self.to_num)
@@ -138,31 +144,44 @@ class Video:
         doc.showPage()
 
         columns = len(dirList)
-        margins = 0.5 * cm
-        spacing = 0.5 * cm
+        margins = 0.5
+        spacing = 0.5
 
 
-
-        box_width = (A4[0] - 2 * margins - (spacing * (columns - 1))) / columns
+        szer = 32
+        # box_width = (A4[0] - 2 * margins - (spacing * (columns - 1))) / columns
+        box_width = (szer - 2 * margins - (spacing * (columns - 1))) / columns
         box_height = box_width / ratio
+        # print(ratio)
         box_height += box_height*0.2
 
-        pos_y = box_height * (files_qty - 1) + margins
+        first_pos_y = box_height * ((files_qty - 1) if files_qty < 20 else 19) + margins
+        next_pos_y = box_height * (files_qty if files_qty < 20 else 19) + margins
+        pos_y = first_pos_y
 
-        doc.setPageSize((A4[0], files_qty * box_height + (2 * cm)))
+        doc.setPageSize((szer * cm, ((files_qty if files_qty < 20 else 20) * box_height + 2) * cm))
         doc.setFont('Helvetica-Bold', 38 / (columns if columns < 12 else columns * 2))
 
+        # print("Szerokosc:", box_width, "Wysokosc:", box_height, "Ratio:", ratio)
+        # print("Strona:", szer, ((files_qty if files_qty < 20 else 20) * box_height + 2))
         for y in range(0, files_qty):
             for x in range(0, columns):
                 pos_x = margins + x * (box_width + margins)
                 src = self.temp_dict + '\\' + dirList[x] + '\\' + file_list_sorted[x][y]
-                doc.drawImage(src, pos_x, pos_y, box_width, box_height, preserveAspectRatio=True, anchor='n')
-                doc.drawCentredString(pos_x + (box_width / 2), pos_y + ((box_height - box_width) / 2.5), prepare_description(file_list_sorted[x][y]))
+                doc.drawImage(src, pos_x * cm, pos_y * cm, box_width * cm, box_height * cm, preserveAspectRatio=True, anchor='n')
+                doc.drawCentredString((pos_x + (box_width / 2)) * cm, (pos_y + ((box_height - box_width) / 2.5)) * cm, prepare_description(file_list_sorted[x][y]))
+                # print(src)
+                # print("X:", pos_x, "Y:", pos_y)
                 if y == files_qty and x == columns:
                     break
             if y == files_qty:
                 break
+            if y % 19 == 0 and y != 0:
+                pos_y = next_pos_y
+                doc.showPage()
+                doc.setPageSize((szer * cm, ((files_qty if files_qty < 20 else 19) * box_height + 2) * cm))
+                doc.setFont('Helvetica-Bold', 38 / (columns if columns < 12 else columns * 2))
             pos_y -= box_height
 
-        doc.showPage()
+        # doc.showPage()
         doc.save()
